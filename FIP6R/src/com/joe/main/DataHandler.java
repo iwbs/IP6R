@@ -27,6 +27,7 @@ import org.apache.http.client.methods.HttpPost;
 import org.apache.http.client.protocol.HttpClientContext;
 import org.apache.http.client.utils.URLEncodedUtils;
 import org.apache.http.cookie.Cookie;
+import org.apache.http.impl.client.BasicCookieStore;
 import org.apache.http.impl.client.CloseableHttpClient;
 import org.apache.http.impl.client.HttpClientBuilder;
 import org.apache.http.impl.client.LaxRedirectStrategy;
@@ -73,6 +74,10 @@ public class DataHandler {
 	//	idHongkong
 	//	homeReturnCard
 	//	passport
+	//	10:00 AM-11:00 AM
+	//	11:00 AM-12:00 PM
+	//	12:00 PM-1:00 PM
+	//	6:00 PM-7:00 PM
 
 	private final Logger logger = Logger.getLogger(DataHandler.class);
 
@@ -95,6 +100,7 @@ public class DataHandler {
 	private final int SOCKET_TIMEOUT_MS = 10000;
 	
 	private boolean isCaptchaPreload = false;
+	private Cookie signinCookie;
 
 	public DataHandler(GUI gui) {
 		this.gui = gui;
@@ -160,6 +166,7 @@ public class DataHandler {
 							CloseableHttpResponse captchaResponse = httpclient.execute(httpget, context);
 							gui.setCaptchaImage(captchaResponse.getEntity().getContent());
 							isCaptchaPreload = true;
+							signinCookie = getCookie("JSESSIONID", "signin.apple.com", "/IDMSWebAuth/");
 							
 							Calendar cal = Calendar.getInstance();
 							cal.add(Calendar.MINUTE, 2);
@@ -187,24 +194,27 @@ public class DataHandler {
 					try {
 						//Reset all
 						redirectLocations = new ArrayList<URI>();
-						if(!isCaptchaPreload){
-							if(httpclient != null)
-								httpclient.close();
-							context = HttpClientContext.create();
-							
-							RequestConfig.Builder requestBuilder = RequestConfig.custom()
-									.setConnectTimeout(CONNTECTION_TIMEOUT_MS)
-									.setConnectionRequestTimeout(CONNECTION_REQUEST_TIMEOUT_MS)
-									.setSocketTimeout(SOCKET_TIMEOUT_MS);
-							if(gui.useProxy()){
-								HttpHost proxy = new HttpHost(gui.getProxyURL(), gui.getProxyPort(), "http");
-								requestBuilder.setProxy(proxy);
-							}
-							
-							httpclient = HttpClientBuilder.create()
-									.setRedirectStrategy(new LaxRedirectStrategy())
-									.setDefaultRequestConfig(requestBuilder.build())
-									.build();
+						if(httpclient != null)
+							httpclient.close();
+						context = HttpClientContext.create();
+						
+						RequestConfig.Builder requestBuilder = RequestConfig.custom()
+								.setConnectTimeout(CONNTECTION_TIMEOUT_MS)
+								.setConnectionRequestTimeout(CONNECTION_REQUEST_TIMEOUT_MS)
+								.setSocketTimeout(SOCKET_TIMEOUT_MS);
+						if(gui.useProxy()){
+							HttpHost proxy = new HttpHost(gui.getProxyURL(), gui.getProxyPort(), "http");
+							requestBuilder.setProxy(proxy);
+						}
+						
+						httpclient = HttpClientBuilder.create()
+								.setRedirectStrategy(new LaxRedirectStrategy())
+								.setDefaultRequestConfig(requestBuilder.build())
+								.build();
+
+						if(isCaptchaPreload){
+							context.setCookieStore(new BasicCookieStore());
+							context.getCookieStore().addCookie(signinCookie);
 						}
 						
 						HttpGet httpget = new HttpGet("https://reserve-hk.apple.com/HK/zh_HK/reserve/iPhone");
