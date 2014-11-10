@@ -12,6 +12,7 @@ import java.util.Calendar;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TreeMap;
 import java.util.concurrent.ExecutorService;
 import java.util.concurrent.Executors;
 
@@ -418,7 +419,7 @@ public class DataHandler {
 			JsonParser parser = new JsonParser();
 			JsonObject timeslotJson = (JsonObject)parser.parse(timeslotJsonStr);
 			JsonArray timeslotsAry = timeslotJson.get("timeslots").getAsJsonArray();
-			Map<String, String> timeslotsMap = new HashMap<>();
+			Map<String, String> timeslotsMap = new TreeMap<>();
 			for(JsonElement ele : timeslotsAry){
 				JsonObject object = ele.getAsJsonObject();
 				String timeSlotId = object.get("timeSlotId").getAsString();
