@@ -450,7 +450,8 @@ public class GUI extends JPanel {
 	        try {
 	        	Tesseract instance = Tesseract.getInstance(); // JNA Interface Mapping
 	        	instance.setTessVariable("tessedit_char_whitelist", "ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789-");
-	        	result = instance.doOCR(image).trim().replaceAll(" ", "");
+	        	result = instance.doOCR(image).trim().replaceAll(" ", "")
+	        			.replaceAll("1T", "TT");	//imperfect OCR...
 	        } catch (TesseractException e) {
 	            System.err.println(e.getMessage());
 	        }
